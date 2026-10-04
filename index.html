@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Glowing Heart</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function heartPoint(t, scale) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      return { x: x * scale, y: y * scale };
+    }
+
+    let time = 0;
+    let revealCount = 0;
+    const points = 360;
+    const revealSpeed = 1.5;
+
+    function draw() {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Fonni tozalash va ozgina iz qoldirish
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2 - 20;
+      const scale = Math.min(w, h) / 40;
+
+      const origin = { x: cx, y: cy };
+
+      ctx.globalCompositeOperation = 'lighter';
+
+      const outlineCount = Math.min(points, Math.floor(revealCount));
+
+      for (let i = 0; i < outlineCount; i++) {
+        const t = (i / points) * Math.PI * 2;
+        const p = heartPoint(t, scale);
+
+        const x1 = cx;
+        const y1 = cy;
+
+        const jitter = Math.sin(time * 2 + i * 0.05) * 2;
+        const x2 = cx + p.x + jitter;
+        const y2 = cy + p.y + jitter;
+
+        const angleFrac = i / points;
+        const hue = 330 + Math.sin(angleFrac * Math.PI * 2 + time) * 15;
+        const light = 55 + Math.sin(angleFrac * Math.PI * 4 + time * 2) * 15;
+        const alpha = Math.abs(Math.sin(angleFrac * Math.PI + time));
+
+        ctx.strokeStyle = `hsla(${hue}, 90%, ${light}%, ${alpha})`;
+        ctx.lineWidth = 0.8;
+        ctx.shadowColor = `hsla(${hue}, 95%, 65%, 0.8)`;
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      ctx.shadowBlur = 0;
+      ctx.globalCompositeOperation = 'source-over';
+
+      if (revealCount < points) {
+        revealCount += revealSpeed;
+      }
+
+      time += 0.02;
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>
